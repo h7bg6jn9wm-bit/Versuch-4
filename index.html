@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070c12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diagnose SHK">
+<title>Diagnose SHK</title>
+<style>
+:root{--bg:#060b10;--panel:#0d151e;--panel2:#121e28;--line:#304652;--cyan:#61e3fa;--yellow:#ffd33d;--red:#ff646b;--green:#4be49a;--muted:#91a3af}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:#edf4f7;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}button{font:inherit;color:inherit}
+body{padding-bottom:env(safe-area-inset-bottom)}.app{max-width:1100px;margin:auto;padding:10px}
+.top{display:flex;align-items:center;gap:9px;margin-bottom:8px}.brand{font-size:14px;font-weight:950;letter-spacing:.16em}.mode{margin-left:auto;background:#111b24;border:1px solid #334c59;border-radius:12px;padding:8px 10px;font-weight:850}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:8px}.tabs button{border:1px solid #293e49;background:#0d151d;border-radius:12px;padding:9px 12px;white-space:nowrap;font-weight:800}.tabs .on{border-color:var(--cyan);color:#a9f4ff;box-shadow:inset 0 0 0 1px #61e3fa22}
+.board{position:relative;border:1px solid #35515e;border-radius:18px;overflow:hidden;background:#aab5bb;box-shadow:0 18px 55px #0009}
+.hud{position:absolute;z-index:5;left:10px;right:10px;top:10px;display:flex;gap:8px;pointer-events:none}.fault{flex:1;background:#071019ee;border:1px solid var(--cyan);border-radius:14px;padding:10px 12px}.eyebrow{font-size:9px;font-weight:950;letter-spacing:.16em;color:#7897a4}.fault h1{font-size:15px;margin:3px 0}.fault p{font-size:11px;color:#a9bac4;margin:0;line-height:1.35}.timer{background:var(--yellow);color:#111;border-radius:14px;padding:10px 11px;font-weight:950;height:max-content;min-width:65px;text-align:center}
+svg{display:block;width:100%;height:auto;min-height:650px;background:linear-gradient(#c6ced2,#929ea5)}svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.pipe{fill:none;stroke:#075df0;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}.gas{fill:none;stroke:#ddb500;stroke-width:7;stroke-linecap:round}.sig{fill:none;stroke:#27a95d;stroke-width:3;stroke-dasharray:8 7}.hit{cursor:pointer}.hit:hover{filter:brightness(1.08)}.label{font-size:12px;font-weight:900;fill:#17262e}.small{font-size:9px;font-weight:800;fill:#253943}.screen{fill:#061117;stroke:#425a66;stroke-width:2}.cyan{fill:#6ceaff}
+.bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.stat{background:#0d151e;border:1px solid #293f4b;border-radius:13px;padding:9px 11px}.stat small{display:block;color:var(--muted);font-size:8px;font-weight:900;letter-spacing:.12em}.stat b{font-size:16px}
+.panel{margin-top:8px;background:var(--panel);border:1px solid #293f4b;border-radius:16px;padding:12px}.panel h3{margin:0 0 8px;font-size:12px;letter-spacing:.08em}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.tools button,.choice{background:#14212b;border:1px solid #304956;border-radius:11px;padding:10px;text-align:left;font-weight:800;font-size:12px}.tools button.active{border-color:var(--yellow);background:#211e11}
+.log{margin-top:8px;max-height:150px;overflow:auto}.logline{font-size:11px;color:#b9c7ce;border-bottom:1px solid #1b2b34;padding:6px 0}.ok{color:var(--green)}.bad{color:#ff969b}
+.modal{position:fixed;inset:0;z-index:20;background:#000b;display:none;align-items:flex-end}.modal.show{display:flex}.sheet{width:min(760px,100%);max-height:90vh;overflow:auto;background:#0b141c;border:1px solid #3b5562;border-radius:22px 22px 0 0;padding:16px;box-shadow:0 -20px 60px #000b}.sheetHead{display:flex;gap:10px;align-items:center}.close{margin-left:auto;border:0;background:#1a2730;border-radius:12px;width:42px;height:42px}.readings{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0}.reading{background:#111e28;border:1px solid #29404b;border-radius:11px;padding:9px}.reading span{display:block;color:#8398a5;font-size:9px}.reading b{font-size:16px}.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.actions button{background:#14212b;border:1px solid #304956;border-radius:11px;padding:12px;text-align:left;font-size:12px;font-weight:850}.answer{margin-top:9px;background:#071117;border:1px solid #304752;border-radius:11px;padding:11px;font-size:12px;line-height:1.4}
+@media(max-width:620px){.app{padding:7px}.hud{left:7px;right:7px;top:7px}.fault h1{font-size:13px}.fault p{font-size:10px}.timer{min-width:58px}.tools{grid-template-columns:repeat(2,1fr)}.actions{grid-template-columns:1fr}.board svg{min-height:690px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><div class="brand">DIAGNOSE SHK</div><button class="mode" id="mode">SCHWER</button></div>
+<div class="tabs"><button class="on" id="tPlant">Anlage</button><button id="tMeter">Messgeräte</button><button id="tLog">Diagnoseprotokoll</button><button id="newFault">Neue Störung</button></div>
+
+<div class="board">
+<div class="hud"><div class="fault"><div class="eyebrow">FEHLERBILD · FALL 001</div><h1 id="faultTitle">Brenner startet nicht</h1><p id="faultDesc">Wärmeanforderung vorhanden. Nach dem Startversuch entsteht keine stabile Flamme.</p></div><div class="timer" id="timer">09:00</div></div>
+
+<svg viewBox="0 0 1000 980" aria-label="Detaillierte Heizungsanlage">
+<defs><linearGradient id="m" x1="0" x2="1"><stop stop-color="#eef2f2"/><stop offset=".5" stop-color="#adb7bb"/><stop offset="1" stop-color="#edf0ef"/></linearGradient><linearGradient id="k" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eeeede"/><stop offset="1" stop-color="#c3c3b2"/></linearGradient></defs>
+
+<path class="pipe" d="M410 520V750H150V830H875V345H720M530 690H875M530 690V520M720 345H620V250"/><path class="gas" d="M420 850H535V650"/><path class="sig" d="M650 875V760H610V570"/>
+
+<!-- analyzer -->
+<g class="hit" onclick="openPart('Abgasanalyse','analyzer')"><rect x="55" y="205" width="180" height="125" rx="14" fill="#10181e" stroke="#344c58" stroke-width="4"/><text x="145" y="235" fill="#d4e0e5" font-size="14" font-weight="900" text-anchor="middle">ABGASANALYSE</text><text x="145" y="264" fill="#72e8ff" font-size="15" text-anchor="middle">O₂ 20.9 %</text><text x="145" y="289" fill="#72e8ff" font-size="15" text-anchor="middle">CO₂ 0.0 %</text><text x="145" y="314" fill="#72e8ff" font-size="15" text-anchor="middle">CO 8 ppm</text></g>
+<!-- boiler -->
+<g class="hit" onclick="openPart('Heizkessel','boiler')"><rect x="300" y="220" width="330" height="520" rx="18" fill="url(#k)" stroke="#4b585f" stroke-width="5"/><rect x="325" y="285" width="280" height="175" rx="12" fill="#566168" stroke="#2e3b42" stroke-width="4"/><path d="M350 320h230M350 350h230M350 380h230M350 410h230" stroke="#2481f4" stroke-width="10"/><rect x="330" y="238" width="105" height="38" rx="5" class="screen"/><text x="382" y="263" class="cyan" font-size="14" font-weight="900" text-anchor="middle">62.4 °C</text><text x="465" y="257" font-size="30" fill="#34444c">✣</text><text x="553" y="264" fill="#18262d" font-size="13" font-weight="900" text-anchor="middle">1.2 bar</text><circle cx="553" cy="249" r="31" fill="#f7f7f2" stroke="#4a5961" stroke-width="4"/><path d="M553 249l20-12" stroke="#cf3035" stroke-width="4"/><rect x="345" y="490" width="240" height="115" rx="10" fill="#e8ebe8" stroke="#69757b" stroke-width="3"/><rect x="370" y="510" width="70" height="45" rx="5" class="screen"/><text x="405" y="538" class="cyan" font-size="12" font-weight="900" text-anchor="middle">HEAT</text><circle cx="480" cy="532" r="17" fill="#249b63"/><circle cx="525" cy="532" r="17" fill="#bd3037"/><text x="465" y="630" class="label" text-anchor="middle">HEIZKESSEL</text></g>
+<!-- burner -->
+<g class="hit" onclick="openPart('Ölbrenner','burner')"><rect x="360" y="690" width="205" height="80" rx="12" fill="#202a31" stroke="#111a20" stroke-width="3"/><circle cx="412" cy="730" r="28" fill="#b93238"/><circle cx="412" cy="730" r="12" fill="#ffd23a"/><rect x="458" y="710" width="88" height="43" rx="5" fill="#10181e"/><text x="502" y="737" fill="#75eaff" font-size="12" font-weight="900" text-anchor="middle">LOCKOUT</text><text x="463" y="797" class="label" text-anchor="middle">ÖLBRENNER</text></g>
+<!-- pump -->
+<g class="hit" onclick="openPart('Heizungspumpe','pump')"><circle cx="610" cy="535" r="36" fill="#202b33" stroke="#111a20" stroke-width="3"/><circle cx="610" cy="535" r="23" fill="#cbd3d5"/><path d="M596 535l28-13v26z" fill="#34454e"/><text x="610" y="582" class="label" text-anchor="middle">PUMPE</text></g>
+<!-- mag -->
+<g class="hit" onclick="openPart('Membran-Ausdehnungsgefäß','mag')"><rect x="650" y="610" width="72" height="145" rx="35" fill="#b93238"/><path d="M660 682h52" stroke="#702026" stroke-width="3"/><text x="686" y="780" class="label" text-anchor="middle">MAG</text></g>
+<!-- filter -->
+<g class="hit" onclick="openPart('Schmutzfänger','filter')"><path d="M805 610h60v42l-30 58-30-58z" fill="url(#m)" stroke="#34464f" stroke-width="3"/><path d="M818 635l24 27M842 635l-24 27" stroke="#52656e" stroke-width="3"/><text x="835" y="735" class="label" text-anchor="middle">FILTER</text></g>
+<!-- safety -->
+<g class="hit" onclick="openPart('Sicherheitsventil','safety')"><rect x="760" y="695" width="45" height="72" rx="8" fill="url(#m)" stroke="#34464f" stroke-width="3"/><circle cx="782" cy="730" r="12" fill="#e0bb21"/><text x="782" y="786" class="small" text-anchor="middle">SV 3 bar</text></g>
+<!-- radiators -->
+<g class="hit" onclick="openPart('Heizkörper 1','radiator')"><text x="810" y="375" class="label" text-anchor="middle">HEIZKÖRPER 1</text><rect x="740" y="390" width="150" height="70" rx="7" fill="url(#m)" stroke="#4b5b63" stroke-width="3"/><path d="M755 398v54M773 398v54M791 398v54M809 398v54M827 398v54M845 398v54M863 398v54" stroke="#65757c" stroke-width="4"/></g>
+<g class="hit" onclick="openPart('Heizkörper 2','radiator')"><text x="810" y="485" class="label" text-anchor="middle">HEIZKÖRPER 2</text><rect x="740" y="500" width="150" height="70" rx="7" fill="url(#m)" stroke="#4b5b63" stroke-width="3"/><path d="M755 508v54M773 508v54M791 508v54M809 508v54M827 508v54M845 508v54M863 508v54" stroke="#65757c" stroke-width="4"/></g>
+<!-- gas -->
+<g class="hit" onclick="openPart('Gas-/Ölversorgung','fuel')"><rect x="380" y="820" width="125" height="45" rx="8" fill="#dfb91e" stroke="#4c4b26" stroke-width="3"/><rect x="420" y="805" width="42" height="72" rx="8" fill="#222d34"/><text x="442" y="895" class="label" text-anchor="middle">VERSORGUNG</text></g>
+<!-- thermostat -->
+<g class="hit" onclick="openPart('Raumregler','thermostat')"><rect x="550" y="835" width="150" height="85" rx="12" fill="#f0f2ee" stroke="#53626a" stroke-width="3"/><rect x="570" y="850" width="110" height="37" rx="5" class="screen"/><text x="625" y="875" class="cyan" font-size="15" font-weight="900" text-anchor="middle">22.0 °C</text><text x="625" y="910" class="label" text-anchor="middle">RAUMREGLER</text></g>
+<text x="500" y="955" text-anchor="middle" font-size="13" font-weight="900" fill="#24333b">Bauteil antippen · Messung durchführen · Ursache eingrenzen</text>
+</svg>
+</div>
+
+<div class="bottom"><div class="stat"><small>Punkte</small><b id="score">0 / 100</b></div><div class="stat"><small>Prüfungen</small><b id="checks">0</b></div><div class="stat"><small>Status</small><b id="status">Störung aktiv</b></div></div>
+
+<div class="panel" id="meterPanel">
+<h3>DIAGNOSEWERKZEUGE</h3>
+<div class="tools">
+<button data-tool="multimeter">⚡ Multimeter</button><button data-tool="pressure">◉ Druckmessgerät</button><button data-tool="capacitor">µF Kapazitätsmessung</button><button data-tool="flue">▣ Abgasanalyse</button><button data-tool="temperature">🌡 Temperaturmessung</button><button data-tool="continuity">⌁ Durchgangsprüfung</button>
+</div>
+<div class="log" id="log"></div>
+</div>
+</div>
+
+<div class="modal" id="modal"><div class="sheet"><div class="sheetHead"><div><div class="eyebrow">BAUTEILPRÜFUNG</div><h2 id="mTitle" style="margin:2px 0">Bauteil</h2><div id="mSub" style="color:#91a3af;font-size:12px"></div></div><button class="close" onclick="closeModal()">✕</button></div><div class="readings" id="readings"></div><div class="actions" id="actions"></div><div class="answer" id="answer" style="display:none"></div></div></div>
+
+<script>
+const parts={
+boiler:{sub:"Wärmeerzeuger / Kesselregelung",read:[["Vorlauf","62.4 °C"],["Rücklauf","48.1 °C"],["Druck","1.2 bar"],["Wärmeanforderung","EIN"]],acts:["Regelung auslesen","Fühler prüfen","Wärmeanforderung prüfen","Kesseltemperatur messen"]},
+burner:{sub:"Ölbrenner / Feuerungsautomat",read:[["Status","Störung"],["Motor","läuft"],["Flamme","keine"],["Zündung","aktiv"]],acts:["Störcode auslesen","Ölversorgung prüfen","Zündanlage prüfen","Flammenüberwachung prüfen"]},
+pump:{sub:"Umwälzpumpe Heizkreis",read:[["Drehzahl","2.850 1/min"],["Volumenstrom","1.6 m³/h"],["Δp","180 mbar"],["Signal","100 %"]],acts:["Pumpenstatus prüfen","Volumenstrom messen","Absperrungen prüfen","Pumpenkennlinie prüfen"]},
+gauge:{sub:"Mechanische Druckanzeige",read:[["Anzeige","1.2 bar"],["Sollbereich","1.0–2.0 bar"],["Verlauf","stabil"],["Plausibilität","offen"]],acts:["Extern vergleichen","Druckverlauf beobachten","Anschluss prüfen","Anzeige prüfen"]},
+mag:{sub:"Membran-Ausdehnungsgefäß",read:[["Anlagendruck","1.2 bar"],["Vordruck","0.8 bar"],["Volumen","50 l"],["Membran","prüfen"]],acts:["Vordruck messen","Membran prüfen","Druckverlauf beobachten","Füllarmatur prüfen"]},
+filter:{sub:"Schmutzfänger / hydraulischer Widerstand",read:[["Δp","0.08 bar"],["Verschmutzung","mittel"],["Durchfluss","vorhanden"],["Status","eingeschränkt"]],acts:["Differenzdruck messen","Sieb prüfen","Sieb reinigen","Absperrungen prüfen"]},
+radiator:{sub:"Heizfläche / Thermostatventil",read:[["Vorlauf","61.8 °C"],["Rücklauf","48.7 °C"],["Ventil","offen"],["Leistung","normal"]],acts:["VL/RL messen","Ventil prüfen","Entlüften","Volumenstrom prüfen"]},
+safety:{sub:"Sicherheitsventil Heizkreis",read:[["Nennwert","3.0 bar"],["Abblaseweg","frei"],["Tropfen","nein"],["Status","bereit"]],acts:["Ventil prüfen","Abblaseleitung prüfen","Dichtheit prüfen","Druck beobachten"]},
+thermostat:{sub:"Raumregler / Wärmeanforderung",read:[["Raum","21.0 °C"],["Soll","22.0 °C"],["Anforderung","EIN"],["Signal","0–10 V"]],acts:["Sollwert ändern","Anforderung prüfen","Signal messen","Fühler prüfen"]},
+analyzer:{sub:"Verbrennungs- und Abgasmessung",read:[["O₂","20.9 %"],["CO₂","0.0 %"],["CO","8 ppm"],["Abgas","22 °C"]],acts:["Abgasweg prüfen","Messsonde prüfen","Brenner starten","Verbrennung bewerten"]},
+fuel:{sub:"Versorgung / Brennstoffstrecke",read:[["Freigabe","EIN"],["Versorgung","vorhanden"],["Absperrung","offen"],["Druck","prüfen"]],acts:["Versorgungsdruck messen","Absperrung prüfen","Filter prüfen","Magnetventil prüfen"]}
+};
+
+let scenario=0, mode="SCHWER",score=0,checks=0,time=540,current=null;
+const scenarios=[
+["Brenner startet nicht","Wärmeanforderung vorhanden. Nach dem Startversuch entsteht keine stabile Flamme.","burner"],
+["Heizkreis ohne ausreichenden Volumenstrom","Pumpe läuft, aber Heizflächen werden nicht gleichmäßig versorgt.","filter"],
+["Anlagendruck instabil","Der Druck verändert sich zwischen kaltem und warmem Zustand ungewöhnlich stark.","mag"],
+["Brenner fällt nach Startversuch auf Störung","Motor läuft, Zündung wird angesteuert, anschließend wird keine Flamme erkannt.","burner"]
+];
+function $(id){return document.getElementById(id)}
+function log(t,good=false){$("log").innerHTML=`<div class="logline ${good?'ok':''}">${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} · ${t}</div>`+$("log").innerHTML}
+function openPart(name,key){current=key;let p=parts[key]||parts.boiler;$("mTitle").textContent=name;$("mSub").textContent=p.sub;$("readings").innerHTML=p.read.map(x=>`<div class="reading"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");$("actions").innerHTML=p.acts.map(a=>`<button onclick="check('${a.replaceAll("'","")}')">${a}<span style="float:right">›</span></button>`).join("");$("answer").style.display="none";$("modal").classList.add("show")}
+function closeModal(){$("modal").classList.remove("show")}
+function check(action){
+ checks++;$("checks").textContent=checks;
+ let target=scenarios[scenario][2], good=current===target || (target==="filter"&&current==="pump");
+ let text;
+ if(good){score=Math.min(100,score+(mode==="SCHWER"?8:6));text=`Relevanter Befund: „${action}“. Diese Prüfung passt zur aktiven Fehlerkette. Weitere Messung zur eindeutigen Bestätigung empfohlen.`;log(text,true)}
+ else{text=`„${action}“ durchgeführt. Messwert plausibel; die Prüfung grenzt die Ursache ein, liefert aber noch keinen eindeutigen Fehlernachweis.`;log(text)}
+ $("score").textContent=score+" / 100";$("answer").style.display="block";$("answer").textContent=text;
+ if(score>=32)$("status").textContent="Fehler eingegrenzt";
+}
+function tool(t){
+ const values={multimeter:"L1–N: 230 V · Freigabe: vorhanden",pressure:"Anlagendruck: 1.20 bar · Δp Filter: 0.08 bar",capacitor:"Betriebskondensator: 2.35 µF · Nennwert: 3.15 µF",flue:"O₂: 20.9 % · CO₂: 0.0 % · CO: 8 ppm",temperature:"Kessel VL: 62.4 °C · RL: 48.1 °C",continuity:"Sicherheitskette: geschlossen · Kontaktfreigaben vorhanden"};
+ log(`${t}: ${values[t]||"Messung abgeschlossen."}`, t==="capacitor"&&scenario===0);
+ if(t==="capacitor"&&scenario===0){score=Math.min(100,score+18);$("score").textContent=score+" / 100";$("status").textContent="Fehler stark eingegrenzt"}
+}
+document.querySelectorAll("[data-tool]").forEach(b=>b.onclick=()=>tool(b.dataset.tool));
+$("mode").onclick=()=>{mode=mode==="SCHWER"?"ANFÄNGER":"SCHWER";$("mode").textContent=mode}
+$("newFault").onclick=()=>{scenario=(scenario+1)%scenarios.length;score=0;checks=0;$("score").textContent="0 / 100";$("checks").textContent="0";$("status").textContent="Störung aktiv";$("faultTitle").textContent=scenarios[scenario][0];$("faultDesc").textContent=scenarios[scenario][1];$("log").innerHTML=""}
+$("tMeter").onclick=()=>document.getElementById("meterPanel").scrollIntoView({behavior:"smooth"})
+$("tLog").onclick=()=>document.getElementById("log").scrollIntoView({behavior:"smooth"})
+setInterval(()=>{if(time>0){time--;let m=String(Math.floor(time/60)).padStart(2,"0"),s=String(time%60).padStart(2,"0");$("timer").textContent=m+":"+s}},1000)
+</script>
+</body></html>
